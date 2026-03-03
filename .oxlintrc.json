@@ -1,0 +1,52 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicolo-ribaudo/oxc/json-schema-oxlintrc/npm/oxlint/configuration_schema.json",
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "plugins": ["promise"],
+  "rules": {
+    "no-await-in-loop": "off",
+    "no-param-reassign": ["warn", { "props": true }],
+
+    "complexity": ["warn", { "max": 10 }],
+    "max-depth": ["warn", { "max": 3 }],
+    "max-lines": ["warn", { "max": 300 }],
+    "max-lines-per-function": ["error", { "max": 75 }],
+    "max-params": ["warn", { "max": 4 }],
+    "max-nested-callbacks": ["warn", { "max": 1 }],
+    "max-classes-per-file": ["error", { "max": 0 }],
+
+    "arrow-body-style": "warn",
+    "no-else-return": "warn",
+    "prefer-const": "warn",
+    "prefer-template": "warn",
+    "prefer-exponentiation-operator": "warn",
+    "prefer-object-spread": "warn",
+    "no-unneeded-ternary": "warn",
+    "yoda": "warn",
+
+    "typescript/consistent-type-imports": "warn",
+    "typescript/no-inferrable-types": "warn",
+    "typescript/no-explicit-any": "warn",
+    "typescript/no-unnecessary-type-parameters": "warn",
+    "typescript/no-unnecessary-type-arguments": "warn",
+    "typescript/no-unnecessary-type-assertion": "warn",
+    "typescript/no-unnecessary-type-constraint": "warn",
+    "typescript/no-extraneous-class": "warn",
+    "typescript/prefer-function-type": "warn",
+
+    "unicorn/no-useless-undefined": "warn",
+    "unicorn/prefer-optional-catch-binding": "warn",
+    "unicorn/prefer-array-flat-map": "warn",
+    "unicorn/prefer-includes": "warn",
+    "unicorn/prefer-string-replace-all": "warn",
+    "unicorn/prefer-string-slice": "warn",
+    "unicorn/prefer-at": "warn",
+    "unicorn/prefer-date-now": "warn",
+    "unicorn/no-lonely-if": "warn",
+    "unicorn/no-static-only-class": "warn",
+    "unicorn/throw-new-error": "warn"
+  }
+}

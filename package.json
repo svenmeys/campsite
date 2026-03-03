@@ -1,0 +1,29 @@
+{
+  "name": "campsite",
+  "version": "0.1.0",
+  "description": "Leave every session better than you found it. Session workflow toolkit for AI-assisted development.",
+  "module": "src/index.ts",
+  "type": "module",
+  "bin": {
+    "campsite": "src/index.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "typecheck": "tsgo --noEmit",
+    "lint": "oxlint src/"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@typescript/native-preview": "^7.0.0-dev.20260303.1",
+    "oxlint": "^1.51.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "keywords": ["claude-code", "ai-workflow", "session-management", "developer-tools"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/svenmeys/campsite"
+  }
+}
