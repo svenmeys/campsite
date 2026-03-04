@@ -1,58 +1,51 @@
-/**
- * Config — campsite settings.
- *
- * Reads from ~/.campsite/config.json if it exists.
- * Defaults to sensible values when no config is present.
- */
-
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-interface CampsiteConfig {
-  /** Root directory for all stash data. Default: ~/.campsite */
+export interface CampsiteConfig {
   stashRoot: string;
 }
 
-const CONFIG_DIR = join(homedir(), ".campsite");
-const CONFIG_PATH = join(CONFIG_DIR, "config.json");
-const DEFAULT_STASH_ROOT = CONFIG_DIR;
-
-let cached: CampsiteConfig | null = null;
-
-export function loadConfig(): CampsiteConfig {
-  if (cached) return cached;
-
-  if (existsSync(CONFIG_PATH)) {
-    try {
-      const raw = JSON.parse(readFileSync(CONFIG_PATH, "utf-8"));
-      cached = {
-        stashRoot: resolveHome(raw.stashRoot ?? DEFAULT_STASH_ROOT),
-      };
-      return cached;
-    } catch {
-      // Bad config — use defaults
-    }
-  }
-
-  cached = { stashRoot: DEFAULT_STASH_ROOT };
-  return cached;
+function configDir(): string {
+  return process.env.CAMPSITE_CONFIG_DIR ?? join(homedir(), ".campsite");
 }
 
-export function saveConfig(partial: Partial<CampsiteConfig>): void {
-  const current = loadConfig();
-  const merged = { ...current, ...partial };
-
-  mkdirSync(CONFIG_DIR, { recursive: true });
-  writeFileSync(CONFIG_PATH, JSON.stringify(merged, null, 2));
-  cached = merged;
-}
-
-export function getStashRoot(): string {
-  return loadConfig().stashRoot;
+function configPath(): string {
+  return join(configDir(), "config.json");
 }
 
 function resolveHome(p: string): string {
   if (p.startsWith("~/")) return join(homedir(), p.slice(2));
   return p;
+}
+
+export function loadConfig(): CampsiteConfig {
+  const path = configPath();
+  const dir = configDir();
+  if (existsSync(path)) {
+    try {
+      const raw = JSON.parse(readFileSync(path, "utf-8"));
+      return { stashRoot: resolveHome(raw.stashRoot ?? dir) };
+    } catch {
+      // Corrupt config — fall through to defaults
+    }
+  }
+  return { stashRoot: dir };
+}
+
+export function saveConfig(partial: Partial<CampsiteConfig>): void {
+  const dir = configDir();
+  const resolved = { ...partial };
+  if (resolved.stashRoot) resolved.stashRoot = resolveHome(resolved.stashRoot);
+  const merged = { ...loadConfig(), ...resolved };
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(configPath(), JSON.stringify(merged, null, 2));
+}
+
+export function configExists(): boolean {
+  return existsSync(configPath());
+}
+
+export function getStashRoot(): string {
+  return process.env.CAMPSITE_STASH_ROOT ?? loadConfig().stashRoot;
 }

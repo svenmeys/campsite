@@ -1,9 +1,9 @@
 ---
 name: journal
-description: "Write a trail log at session end. Captures the journey — what happened, decisions made, dead ends explored. Use when the user says 'journal', 'wrap up', 'log this session', or invokes /journal."
+description: "Write a session journal at session end. Captures what happened — decisions made, dead ends explored, solutions found. Use when the user says 'journal', 'wrap up', 'log this session', or invokes /journal."
 ---
 
-# Trail Log (Journal)
+# Session Journal
 
 Capture the session story. One entry per session — write-only, no reads needed.
 
@@ -25,9 +25,20 @@ You compose the narrative from the conversation in memory. The `campsite` CLI ha
 campsite status --brief
 ```
 
-This gives you repo name, today's session count, and open cairns.
+This gives you repo name, today's session count, and open side quests.
 
-### 2. Compose the Trail Log
+### 2. Compose the Journal
+
+Start the journal with a header using the entry type that best fits the session:
+
+| Emoji | Type        | When to use                              |
+| ----- | ----------- | ---------------------------------------- |
+| 🎯    | quest       | Main work intent, what you set out to do |
+| ✨    | shiny       | Got attracted to something new           |
+| 🐿️    | squirrel    | Sudden unrelated context switch          |
+| 🕳️    | rabbit-hole | Deep dive, lost track of time            |
+
+Example header: `# 🎯 Quest: Built auth API — 2026-03-04`
 
 You have the full conversation in context. Extract:
 
@@ -40,31 +51,22 @@ You have the full conversation in context. Extract:
 - **Key decisions** — what you decided and why
 - **What worked** — the solution, the fix, the outcome
 
-### 3. Write the Trail Log
+### 3. Write the Journal
 
 Pipe your composed entry to the CLI:
 
 ```bash
-cat <<'EOF' | campsite log --type quest --title "Your Title"
+cat <<'EOF' | campsite journal
 [Your composed journal content here]
 EOF
 ```
 
-Entry types:
+### 4. Write the Working Context
 
-| Emoji | Type        | When to use                              |
-| ----- | ----------- | ---------------------------------------- |
-| 🎯    | quest       | Main work intent, what you set out to do |
-| ✨    | shiny       | Got attracted to something new           |
-| 🐿️    | squirrel    | Sudden unrelated context switch          |
-| 🕳️    | rabbit-hole | Deep dive, lost track of time            |
-
-### 4. Write the Trail Map (Working Context)
-
-After the trail log, write a working context snapshot so the next session can pick up where you left off:
+After the journal, write a working context snapshot so the next session can pick up where you left off:
 
 ```bash
-cat <<'EOF' | campsite context write
+campsite context "$(cat <<'EOF'
 # Working Context
 
 Updated: YYYY-MM-DD
@@ -93,15 +95,16 @@ Updated: YYYY-MM-DD
 
 🔀 Branch: branch-name
 EOF
+)"
 ```
 
-### 5. Mention Open Cairns
+### 5. Mention Open Side Quests
 
-If there are open side quests, mention them in the trail map's scratchpad or as a note.
+If there are open side quests, mention them in the working context scratchpad or as a note.
 
 ## Summary Sections
 
-At the end of the trail log, include:
+At the end of the journal, include:
 
 ```markdown
 ## TLDR
@@ -109,11 +112,6 @@ At the end of the trail log, include:
 |     | Topic        | Time | Summary        |
 | --- | ------------ | ---- | -------------- |
 | 🎯  | Feature work | 45m  | Added auth API |
-
-## Quest Tree
-
-45m 🎯 Feature work
-└── Added auth API endpoint
 
 ## Quest Log
 
@@ -145,5 +143,5 @@ At the end of the trail log, include:
 
 ## Context Efficiency
 
-**Total tool calls: 3** — status check, write trail log, write trail map.
+**Total tool calls: 3** — status check, write journal, write context.
 No reads needed — the conversation is your source.

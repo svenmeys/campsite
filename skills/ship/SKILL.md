@@ -1,11 +1,11 @@
 ---
 name: ship
-description: "Summit check — pre-ship validation checklist. Run before committing, pushing, or declaring 'done'. Catches the mistakes that manual review misses. Use proactively when about to commit, or when the user says 'ship', 'done', 'ready to push'."
+description: "Pre-ship validation checklist. Run before committing, pushing, or declaring 'done'. Catches the mistakes that manual review misses. Use proactively when about to commit, or when the user says 'ship', 'done', 'ready to push'."
 ---
 
-# Summit Check (Ship Checklist)
+# Ship Checklist
 
-Before you plant the flag at the summit, make sure you actually reached the right peak.
+Before you declare done, make sure you actually are.
 
 Never skip this. Run it BEFORE declaring done, committing, or pushing.
 
@@ -91,7 +91,7 @@ git rev-list --count <base-branch>..HEAD
 ## Output Format
 
 ```
-## Summit Check
+## Ship Check
 
 | # | Check         | Status | Notes               |
 |---|---------------|--------|---------------------|
@@ -107,10 +107,10 @@ git rev-list --count <base-branch>..HEAD
 ```
 
 Verdicts:
-- **SUMMIT REACHED** — all green, ship it
+- **SHIP IT** — all green, ship it
 - **READY with warnings** — minor issues, list them
 - **NOT READY** — critical failures, fix first
-- **TURN BACK** — PR too big, use `/decompose` to split
+- **TOO BIG** — PR too big, use `/decompose` to split
 
 ## Behavioral Rules
 

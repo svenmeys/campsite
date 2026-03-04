@@ -1,6 +1,6 @@
 {
-  "name": "campsite",
-  "version": "0.1.0",
+  "name": "@svenmeys/campsite",
+  "version": "0.3.0",
   "description": "Leave every session better than you found it. Session workflow toolkit for AI-assisted development.",
   "module": "src/index.ts",
   "type": "module",
@@ -10,7 +10,10 @@
   "scripts": {
     "dev": "bun run src/index.ts",
     "typecheck": "tsgo --noEmit",
-    "lint": "oxlint src/"
+    "lint": "oxlint src/ --ignore-pattern '*.test.ts'",
+    "test": "bun test",
+    "prepublishOnly": "bun run test && bun run lint",
+    "release": "bun run scripts/release.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -25,5 +28,18 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/svenmeys/campsite"
-  }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "src",
+    "hooks",
+    "skills",
+    "instructions",
+    "LICENSE",
+    "README.md",
+    "AGENTS.md",
+    "CHANGELOG.md"
+  ]
 }

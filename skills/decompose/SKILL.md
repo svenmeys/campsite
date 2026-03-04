@@ -1,13 +1,11 @@
 ---
 name: decompose
-description: "Plan your switchbacks — break a ticket or feature into small, independently shippable pieces. Use when starting a new ticket, when scope feels too big, or when a branch has grown beyond one session's work."
+description: "Break a ticket or feature into small, independently shippable pieces. Use when starting a new ticket, when scope feels too big, or when a branch has grown beyond one session's work."
 ---
 
-# Switchbacks (Decompose)
+# Decompose
 
-Turn steep climbs into manageable zig-zags. Each switchback (piece) ships independently in 1-2 sessions.
-
-Just like on a mountain trail — you don't go straight up. You cut the slope into sections that are each walkable on their own.
+Break big work into manageable pieces. Each piece ships independently in 1-2 sessions.
 
 ## When to Use
 
@@ -19,7 +17,7 @@ Just like on a mountain trail — you don't go straight up. You cut the slope in
 
 ## Core Rules
 
-1. **Max 5 pieces.** If you need more, you're on an expedition, not a day hike. Flag it.
+1. **Max 5 pieces.** If you need more, the scope is too big. Flag it.
 2. **Each piece ships independently.** It adds value on its own. No piece depends on an unmerged piece.
 3. **Each piece is 1-2 sessions of work.** If a piece feels like more, decompose further.
 4. **Each piece gets its own branch and PR.** No shared branches.
@@ -47,9 +45,9 @@ Look for:
 ### Step 3: Output the Plan
 
 ```markdown
-## Switchbacks: [Ticket ID] — [Title]
+## Plan: [Ticket ID] — [Title]
 
-**Summit:** [One sentence — what does the user get?]
+**Goal:** [One sentence — what does the user get?]
 **Total pieces:** N
 **Estimated sessions:** N
 
@@ -67,22 +65,17 @@ Look for:
 ...
 ```
 
-### Step 4: Save as Route Plan
+### Step 4: Save the Plan
 
 Write the plan to the stash:
 
 ```bash
-cat <<'EOF' | campsite log --type quest --title "Route plan: [ticket-id]"
-[plan content]
+cat <<'EOF' | campsite sq
+[plan content as markdown]
 EOF
 ```
 
-Or write directly to the quests directory:
-
-```bash
-mkdir -p ~/.campsite/$(basename $(git rev-parse --show-toplevel))/quests
-# Write your plan to ~/.campsite/<repo>/quests/<ticket-id>.md
-```
+This saves it to the plans directory and adds a backlog reference.
 
 ### Step 5: Side Quest Check
 
@@ -92,25 +85,25 @@ If anything off-topic comes up during decomposition:
 campsite sq "description"
 ```
 
-Don't act on it — stay on the route planning.
+Don't act on it — stay on the planning.
 
 ## Anti-Patterns to Flag
 
-| Red Flag                           | What to Say                                                          |
-| ---------------------------------- | -------------------------------------------------------------------- |
-| "While we're at it, let's also..." | "That's a cairn. Captured. Let's stay on the trail."                 |
-| Piece has >5 ACs                   | "This switchback is too steep. Let me cut it further."               |
-| Piece touches >3 modules           | "Too much ground for one leg. Let me find a tighter boundary."       |
-| "We need to refactor X first"      | "Required refactor = Piece 0. Nice-to-have = cairn it for the backlog." |
+| Red Flag                           | What to Say                                                  |
+| ---------------------------------- | ------------------------------------------------------------ |
+| "While we're at it, let's also..." | "That's a side quest. Captured. Back to planning."           |
+| Piece has >5 ACs                   | "This piece is too big. Let me break it down further."       |
+| Piece touches >3 modules           | "Too much ground for one piece. Let me find a tighter boundary." |
+| "We need to refactor X first"      | "Required refactor = Piece 0. Nice-to-have = side quest it." |
 
 ## Example
 
 **Ticket:** "Add sorting to all dashboard tables"
 
-**Bad (straight up the mountain):**
+**Bad (one giant PR):**
 - One branch, 25 commits, 66 files, 3 weeks
 
-**Good (switchbacks):**
+**Good (decomposed):**
 1. SortableHeaderCell component + sorting infra (design system only)
 2. Documents table sorting (one table, proves the pattern)
 3. Risks table sorting (including group-aware sorting)

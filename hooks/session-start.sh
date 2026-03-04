@@ -30,22 +30,22 @@ if [[ -d "$context_dir" ]]; then
 fi
 
 if [[ -n "$latest_context" ]]; then
-  echo "🗺️ Trail Map (last session):"
+  echo "🗺️ Context (last session):"
   cat "$latest_context"
   echo ""
 elif [[ -d "$STASH_DIR" ]]; then
-  echo "🗺️ No trail map found. Write one at session end with /journal."
+  echo "🗺️ No context found. Write one at session end with /journal."
 fi
 
-# --- Active Quest (Route Plan) ---
+# --- Active Plan ---
 
-quest_dir="$STASH_DIR/quests"
+quest_dir="$STASH_DIR/plans"
 if [[ -d "$quest_dir" ]]; then
   latest_quest=$(ls -t "$quest_dir"/*.md 2>/dev/null | head -1)
   if [[ -n "$latest_quest" ]]; then
     quest_name=$(basename "$latest_quest" .md)
     if grep -q "In Progress\|🔄" "$latest_quest" 2>/dev/null; then
-      echo "🥾 Active route: $quest_name"
+      echo "📋 Active plan: $quest_name"
       echo "---"
       sed -n '/^## Piece/,/^## [^P]\|^---$/p' "$latest_quest" 2>/dev/null | head -30
       echo ""
@@ -53,13 +53,13 @@ if [[ -d "$quest_dir" ]]; then
   fi
 fi
 
-# --- Trail Markers (Backlog) ---
+# --- Side Quests ---
 
 backlog="$STASH_DIR/backlog.md"
 if [[ -f "$backlog" ]]; then
-  unchecked=$(grep -c '^\- \[ \]' "$backlog" 2>/dev/null || echo "0")
-  if [[ "$unchecked" -gt 0 ]]; then
-    echo "🪨 $unchecked cairns on the trail. Review with: campsite backlog"
+  count=$(grep -c '^[0-9]' "$backlog" 2>/dev/null || echo "0")
+  if [[ "$count" -gt 0 ]]; then
+    echo "📌 $count side quests open. Review with: campsite backlog"
   fi
 fi
 

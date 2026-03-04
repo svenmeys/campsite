@@ -13,12 +13,13 @@ globs: ["**/*"]
 This project uses campsite for persistent session context.
 
 ## Start
-Run `campsite context read` to see where the last session left off.
+Run `campsite context` to see where the last session left off.
 
 ## During work
 If you notice something off-topic, run `campsite sq "description"` and continue.
 
 ## End
-Compose a summary and pipe to `campsite log --type quest --title "summary"`.
-Then compose a handoff and pipe to `campsite context write`.
+
+1. Compose a journal (goal, what happened, decisions, outcome) and pipe to `campsite journal`.
+2. Write a handoff: `campsite context "summary of where things stand"`.
 ```
