@@ -5,6 +5,8 @@ import { nextSession, sessionFilename } from "../lib/session.ts";
 import { flagValue, readStdin } from "../lib/args.ts";
 
 export async function context(args: string[]): Promise<void> {
+  const json = args.includes("--json");
+
   // --file flag → write
   const filePath = flagValue(args, "--file");
   if (filePath) return writeContext(readFileSync(filePath, "utf-8"));
@@ -17,23 +19,38 @@ export async function context(args: string[]): Promise<void> {
   if (text) return writeContext(text);
 
   // No args → read
-  return readContext();
+  return readContext(json);
 }
 
-function readContext(): void {
-  const dir = stashPath("working-context", getRepoName());
+function readContext(json: boolean): void {
+  const repoName = getRepoName();
+  const dir = stashPath("working-context", repoName);
   if (!existsSync(dir)) {
+    if (json) {
+      console.log(JSON.stringify({ repo: repoName, exists: false, file: null, content: null }, null, 2));
+      return;
+    }
     console.log("No context yet. Write one at session end.");
     return;
   }
 
   const latest = readdirSync(dir).filter((f) => f.endsWith(".md")).sort().at(-1);
   if (!latest) {
+    if (json) {
+      console.log(JSON.stringify({ repo: repoName, exists: false, file: null, content: null }, null, 2));
+      return;
+    }
     console.log("No context yet. Write one at session end.");
     return;
   }
 
-  process.stdout.write(readFileSync(join(dir, latest), "utf-8"));
+  const file = join(dir, latest);
+  const content = readFileSync(file, "utf-8");
+  if (json) {
+    console.log(JSON.stringify({ repo: repoName, exists: true, file, content }, null, 2));
+    return;
+  }
+  process.stdout.write(content);
 }
 
 async function writeContext(content: string): Promise<void> {
