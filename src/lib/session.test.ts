@@ -65,4 +65,12 @@ describe("nextSession", () => {
     writeFileSync(join(dir, `${today()}-S1.md`), "today");
     expect(nextSession("journal", "test-repo")).toBe(2);
   });
+
+  it("uses the highest session number when there are gaps", () => {
+    const dir = join(testRoot, "test-repo", "journal");
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, `${today()}-S1.md`), "log 1");
+    writeFileSync(join(dir, `${today()}-S3.md`), "log 3");
+    expect(nextSession("journal", "test-repo")).toBe(4);
+  });
 });

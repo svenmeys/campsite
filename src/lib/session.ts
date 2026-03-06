@@ -22,11 +22,13 @@ export function nextSession(subdir: string, repo?: string): number {
   if (!existsSync(dir)) return 1;
 
   const prefix = `${today()}-S`;
-  const count = readdirSync(dir).filter(
-    (f) => f.startsWith(prefix) && f.endsWith(".md")
-  ).length;
+  const latest = readdirSync(dir)
+    .filter((f) => f.startsWith(prefix) && f.endsWith(".md"))
+    .map((f) => Number(f.slice(prefix.length, -3)))
+    .filter((n) => Number.isInteger(n) && n > 0)
+    .reduce((max, n) => Math.max(max, n), 0);
 
-  return count + 1;
+  return latest + 1;
 }
 
 /** Build session filename: YYYY-MM-DD-S{N}.md */
