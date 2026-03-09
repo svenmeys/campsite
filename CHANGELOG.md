@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+
+- **Stable stash identity across clones** — stash directories now derive from the git remote, so fresh clones and renamed working directories reuse the same project memory
+- **Legacy stash compatibility** — existing stash directories are preserved and linked forward via repo metadata instead of forcing a migration
+- **Agent-friendly JSON output** — `campsite status --json` and `campsite context --json` expose structured data for Codex and other agents
+- **CLI integration coverage** — added end-to-end tests for clone identity, JSON output, and configured stash initialization
+- **Session numbering fix** — new journal/context/plan files use the highest existing session number for the day, avoiding filename reuse when gaps exist
+
 ## 0.3.0
 
 - **Numbered backlog** — side quests are now numbered lines, not markdown checkboxes

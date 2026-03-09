@@ -1,6 +1,6 @@
 {
   "name": "@svenmeys/campsite",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Leave every session better than you found it. Session workflow toolkit for AI-assisted development.",
   "module": "src/index.ts",
   "type": "module",
