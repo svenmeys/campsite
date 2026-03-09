@@ -99,59 +99,63 @@ campsite context "Auth API done, need tests next."
 campsite context
 ```
 
-## Claude Code Setup
+## Agent Setup
 
-### Skills (recommended)
+### Claude Code
 
-Copy or symlink the skills into your Claude Code skills directory:
+**Skills** — Copy or symlink into your Claude Code skills directory:
 
 ```bash
-# Option 1: Symlink (stays updated with campsite)
+# Symlink (stays updated with campsite)
 ln -s $(npm root -g)/@svenmeys/campsite/skills/* ~/.claude/skills/
 
-# Option 2: Copy
+# Or copy
 cp -r $(npm root -g)/@svenmeys/campsite/skills/* ~/.claude/skills/
 ```
 
-This gives you:
-
-- `/journal` — Write a session journal
-- `/sq` — Capture a side quest
-- `/decompose` — Break work into shippable pieces
-- `/ship` — Pre-commit validation checklist
-
-### Session-start hook
-
-Auto-inject your working context at the start of every session:
+**Session-start hook** — Auto-inject working context at session start:
 
 ```bash
 campsite hook --install
 ```
 
-This adds a hook to `~/.claude/settings.json` that runs at session start, showing:
+This gives you `/journal`, `/sq`, `/decompose`, `/ship` skills plus automatic context loading.
 
-- Latest working context (from last session)
-- Active plans
-- Open side quest count
-- Branch health warnings
+### Codex
 
-## Other Agents (Codex, Cursor, Windsurf, etc.)
+Campsite skills follow the [Agent Skills](https://agentskills.io) open standard — the same `SKILL.md` format that Claude Code uses. Codex discovers them from a different path:
 
-Any agent that can run shell commands can use campsite. Add this to your agent's system prompt or rules:
+```bash
+# Symlink to user skills (Codex looks here, not ~/.claude/skills/)
+ln -s $(npm root -g)/@svenmeys/campsite/skills/* ~/.agents/skills/
+
+# Or copy to your repo
+cp -r $(npm root -g)/@svenmeys/campsite/skills/* .agents/skills/
+```
+
+Add the AGENTS.md template from [`instructions/codex.md`](instructions/codex.md) to your project.
+
+### Cursor
+
+Add the `.mdc` rule from [`instructions/cursor.md`](instructions/cursor.md) to `.cursor/rules/campsite.mdc`.
+
+### Windsurf
+
+Add the rule from [`instructions/windsurf.md`](instructions/windsurf.md) to `.windsurf/rules/campsite.md`.
+
+### Any Other Agent
+
+Any agent that can run shell commands works with campsite. See [`instructions/CAMPSITE.md`](instructions/CAMPSITE.md) for the full workflow, or add the minimal version to your agent's system prompt:
 
 ```markdown
 ## Session Workflow
 
-This project uses campsite for session management.
+This project uses campsite for session memory.
 
 At session start: run `campsite context` to see where the last session left off.
 During work: run `campsite sq "message"` to capture tangents without context switching.
-At session end: compose a summary and pipe to `campsite journal`, then write context with `campsite context "handoff notes"`.
-
-See `campsite --help` for all commands.
+At session end: compose a journal and pipe to `campsite journal`, then write context with `campsite context "handoff notes"`.
 ```
-
-For specific agent instructions, see the `instructions/` directory.
 
 ## Stash Structure
 
@@ -199,14 +203,15 @@ The side quest capture (`/sq`) exists specifically because "oh we should also...
 
 The CLI handles the boring stuff (paths, session numbering, file I/O). The agent handles the smart stuff (composing narratives, deciding when to capture). Skills and instructions bridge the gap.
 
-This means campsite works with:
+Campsite skills follow the [Agent Skills](https://agentskills.io) open standard — the same `SKILL.md` format works across tools. The format is portable; only the install path differs:
 
-- **Claude Code** — native skills (`/journal`, `/sq`, `/decompose`, `/ship`)
-- **Codex** — shell commands in AGENTS.md
-- **Cursor** — shell commands in rules
-- **Windsurf** — shell commands in rules
-- **Aider** — shell commands in conventions
-- **Any agent** that can run `campsite <command>`
+| Tool | Skills path | Instructions format |
+|------|-------------|-------------------|
+| **Claude Code** | `~/.claude/skills/` | Native skills + session hook |
+| **Codex** | `~/.agents/skills/` | AGENTS.md + skills |
+| **Cursor** | n/a (rules only) | `.cursor/rules/campsite.mdc` |
+| **Windsurf** | n/a (rules only) | `.windsurf/rules/campsite.md` |
+| **Any agent** | n/a | CLI commands in system prompt |
 
 ## License
 

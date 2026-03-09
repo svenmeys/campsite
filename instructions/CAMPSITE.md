@@ -86,22 +86,29 @@ EOF
 )"
 ```
 
+## Behavioral Rules
+
+- **Side quests are sacred.** Anything off-topic during focused work gets `campsite sq`'d. Never mix unrelated changes into the current task.
+- **Journal the journey, not the destination.** Dead ends and pivots are more valuable than "changed X in Y" — git already tracks file changes.
+- **Working context is a handoff.** Write it as if a different agent will read it cold. Include the continuation prompt.
+- **One scope per session.** If scope grows, capture overflow with `campsite sq`, don't expand the current task.
+
 ## Status Indicators
 
 - ✅ Done — Completed
-- 🔄 In Progress — Started but not finished
-- 📋 Parked — Intentionally paused
+- 🔄 In Progress — Started but not finished (include next step)
+- 📋 Parked — Intentionally paused (note why)
 
 ## Commands Reference
 
 ```
 campsite init           Set up stash for current repo
-campsite sq "msg"       Capture a side quest
-campsite sq done <n>    Remove side quest by number
-campsite journal        Write journal (pipe content or --file)
 campsite context        Read latest working context
 campsite context "text" Write working context (inline)
 campsite context -      Write working context (piped stdin)
-campsite status         Stash overview
+campsite journal        Write journal (pipe content or --file)
+campsite sq "msg"       Capture a side quest
+campsite sq done <n>    Remove side quest by number
 campsite backlog        List side quests
+campsite status         Stash overview
 ```

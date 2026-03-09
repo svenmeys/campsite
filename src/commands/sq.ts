@@ -8,46 +8,83 @@ function backlogPath(repo: string): string {
   return join(stashDir(repo), "backlog.md");
 }
 
-function readEntries(repo: string): string[] {
-  const path = backlogPath(repo);
-  if (!existsSync(path)) return [];
-  return readFileSync(path, "utf-8").split("\n").filter((l) => /^\d+ /.test(l));
+interface Entry {
+  id: number;
+  text: string;
 }
 
-function writeEntries(repo: string, entries: string[]): void {
-  const numbered = entries.map((e, i) => `${i + 1} ${e.replace(/^\d+ /, "")}`);
-  writeFileSync(backlogPath(repo), numbered.join("\n") + (numbered.length ? "\n" : ""));
+interface Backlog {
+  nextId: number;
+  entries: Entry[];
+}
+
+function readBacklog(repo: string): Backlog {
+  const path = backlogPath(repo);
+  if (!existsSync(path)) return { nextId: 1, entries: [] };
+  const raw = readFileSync(path, "utf-8");
+
+  let nextId = 1;
+  let body = raw;
+  const fmMatch = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  if (fmMatch) {
+    const idMatch = fmMatch[1]!.match(/^next_id:\s*(\d+)/m);
+    if (idMatch) nextId = Number(idMatch[1]);
+    body = fmMatch[2] ?? "";
+  }
+
+  const entries = body
+    .split("\n")
+    .filter((l) => /^\d+ /.test(l))
+    .map((l) => {
+      const match = l.match(/^(\d+) (.*)$/)!;
+      return { id: Number(match[1]), text: match[2]! };
+    });
+
+  // Handle legacy files without front matter
+  if (!fmMatch && entries.length > 0) {
+    nextId = Math.max(...entries.map((e) => e.id)) + 1;
+  }
+
+  return { nextId, entries };
+}
+
+function writeBacklog(repo: string, backlog: Backlog): void {
+  const lines = backlog.entries.map((e) => `${e.id} ${e.text}`);
+  const fm = `---\nnext_id: ${backlog.nextId}\n---\n`;
+  writeFileSync(backlogPath(repo), fm + lines.join("\n") + (lines.length ? "\n" : ""));
 }
 
 function addEntry(repo: string, text: string): number {
   ensureStash(repo);
-  const entries = readEntries(repo);
-  const n = entries.length + 1;
-  entries.push(`${n} ${text}`);
-  writeEntries(repo, entries);
-  return n;
+  const backlog = readBacklog(repo);
+  const id = backlog.nextId;
+  backlog.entries.push({ id, text });
+  backlog.nextId = id + 1;
+  writeBacklog(repo, backlog);
+  return id;
 }
 
 function done(repo: string, id: string): void {
   const n = parseInt(id, 10);
-  const entries = readEntries(repo);
-  if (isNaN(n) || n < 1 || n > entries.length) {
+  const backlog = readBacklog(repo);
+  const idx = backlog.entries.findIndex((e) => e.id === n);
+  if (isNaN(n) || idx === -1) {
     console.error(`No side quest #${id}. Run: campsite backlog`);
     process.exit(1);
   }
-  const removed = entries[n - 1]?.replace(/^\d+ /, "") ?? "";
-  entries.splice(n - 1, 1);
-  writeEntries(repo, entries);
+  const removed = backlog.entries[idx]!.text;
+  backlog.entries.splice(idx, 1);
+  writeBacklog(repo, backlog);
   console.log(`✅ Done: ${removed}`);
 }
 
 function review(repo: string): void {
-  const entries = readEntries(repo);
+  const { entries } = readBacklog(repo);
   if (entries.length === 0) {
     console.log("No side quests.");
     return;
   }
-  for (const line of entries) console.log(`  ${line}`);
+  for (const e of entries) console.log(`  ${e.id} ${e.text}`);
 }
 
 export async function sq(args: string[]): Promise<void> {
