@@ -17,6 +17,77 @@ function writeConfig(configDir: string, stashRoot: string): void {
   writeFileSync(join(configDir, "config.json"), JSON.stringify({ stashRoot }, null, 2));
 }
 
+function writePlanningFixture(repo: string, overrides?: { dashboard?: string; plan?: string }): void {
+  mkdirSync(join(repo, "plans"), { recursive: true });
+  writeFileSync(
+    join(repo, "DASHBOARD.md"),
+    overrides?.dashboard ?? `---
+schema: campsite-dashboard/v1
+updated: 2026-03-19
+---
+
+# Dashboard
+
+## Now
+<!-- campsite:section id=now -->
+
+### Ship This Week
+<!-- campsite:section id=now.ship-this-week -->
+
+- [ ] [DB-12] Loosen workspace-owner-only install -- Allow installs by non-owners so other teams can test.
+  - plan: [PLAN-3](plans/PLAN-3-non-owner-install.md)
+  - ticket: ASYNC-123
+  - owner: sven
+
+## Done
+<!-- campsite:section id=done -->
+
+### Recent
+<!-- campsite:section id=done.recent -->
+
+- [x] [DB-8] Ship pricing link
+`,
+  );
+  writeFileSync(
+    join(repo, "plans", "PLAN-3-non-owner-install.md"),
+    overrides?.plan ?? `---
+schema: campsite-plan/v1
+id: PLAN-3
+title: Non-owner install
+status: active
+updated: 2026-03-19
+ticket: ASYNC-123
+dashboard:
+  - DB-12
+---
+
+# PLAN-3: Non-owner install
+
+## Goal
+
+Allow non-owner installs so teams outside the workspace owner can test the app.
+
+## Scope
+
+- Relax install permission gate
+- Preserve existing admin checks
+
+## Acceptance Criteria
+
+- [ ] Non-owner install succeeds
+- [x] Existing admin checks still pass
+
+## Out of Scope
+
+- Marketplace packaging
+
+## Notes
+
+Check Slack install callback assumptions.
+`,
+  );
+}
+
 function runCli(
   cwd: string,
   args: string[],
@@ -90,11 +161,13 @@ describe("campsite CLI", () => {
     expectSuccess(context);
     expectSuccess(status);
 
-    expect(JSON.parse(context.stdout)).toMatchObject({
+    const ctxPayload = JSON.parse(context.stdout);
+    expect(ctxPayload).toMatchObject({
       repo: "app",
       exists: true,
-      content: "Need tests next",
     });
+    expect(ctxPayload.content).toContain("type: note");
+    expect(ctxPayload.content).toContain("Need tests next");
     expect(JSON.parse(status.stdout)).toMatchObject({
       repo: "app",
       exists: true,
@@ -115,5 +188,62 @@ describe("campsite CLI", () => {
     expect(readFileSync(join(stashRoot, "github-com-acme-docs", ".repo.json"), "utf-8")).toContain(
       '"repoName": "docs"',
     );
+  });
+
+  it("lints and shows dashboard and plan markdown", () => {
+    const repo = join(tempRoot, "workspace", "planner");
+    createGitRepo(repo, "git@github.com:acme/planner.git");
+    writePlanningFixture(repo);
+
+    const dashboardLint = runCli(repo, ["dashboard", "lint"], { configDir, stashRoot });
+    const dashboardShow = runCli(
+      repo,
+      ["dashboard", "show", "--section", "now.ship-this-week", "--brief"],
+      { configDir, stashRoot },
+    );
+    const dashboardItem = runCli(repo, ["dashboard", "item", "DB-12", "--json"], { configDir, stashRoot });
+    const planLint = runCli(repo, ["plan", "lint"], { configDir, stashRoot });
+    const planShow = runCli(repo, ["plan", "show", "PLAN-3", "--brief"], { configDir, stashRoot });
+
+    expectSuccess(dashboardLint);
+    expectSuccess(dashboardShow);
+    expectSuccess(dashboardItem);
+    expectSuccess(planLint);
+    expectSuccess(planShow);
+
+    expect(dashboardShow.stdout).toContain("Ship This Week (now.ship-this-week)");
+    expect(dashboardShow.stdout).toContain("[DB-12] Loosen workspace-owner-only install");
+    expect(JSON.parse(dashboardItem.stdout)).toMatchObject({
+      id: "DB-12",
+      planId: "PLAN-3",
+      section: { id: "now.ship-this-week" },
+      title: "Loosen workspace-owner-only install",
+    });
+    expect(planShow.stdout).toContain("PLAN-3: Non-owner install");
+    expect(planShow.stdout).toContain("Acceptance Criteria: 1/2");
+  });
+
+  it("fails dashboard lint when a linked plan file is missing", () => {
+    const repo = join(tempRoot, "workspace", "broken-planner");
+    createGitRepo(repo, "git@github.com:acme/broken-planner.git");
+    writePlanningFixture(repo, {
+      dashboard: `---
+schema: campsite-dashboard/v1
+updated: 2026-03-19
+---
+
+# Dashboard
+
+## Now
+<!-- campsite:section id=now -->
+
+- [ ] [DB-99] Missing linked plan
+  - plan: [PLAN-9](plans/PLAN-9-missing.md)
+`,
+    });
+
+    const result = runCli(repo, ["dashboard", "lint"], { configDir, stashRoot });
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain("Linked plan file does not exist");
   });
 });

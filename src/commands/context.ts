@@ -1,8 +1,9 @@
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { stashPath, getRepoName, ensureStash } from "../lib/stash.ts";
-import { nextSession, sessionFilename } from "../lib/session.ts";
+import { nextSession, sessionFilename, today } from "../lib/session.ts";
 import { flagValue, readStdin } from "../lib/args.ts";
+import { ensureFrontmatter } from "../lib/frontmatter.ts";
 
 export async function context(args: string[]): Promise<void> {
   const json = args.includes("--json");
@@ -59,8 +60,10 @@ async function writeContext(content: string): Promise<void> {
 
   const sessionNum = nextSession("working-context", repo);
   const filename = sessionFilename(sessionNum);
+  const date = today();
+  const output = ensureFrontmatter(content, "note", date, `Working Context — ${date} S${sessionNum}`);
   const outPath = join(stashPath("working-context", repo), filename);
 
-  await Bun.write(outPath, content);
+  await Bun.write(outPath, output);
   console.log(`🗺️  ${filename} (S${sessionNum})`);
 }
