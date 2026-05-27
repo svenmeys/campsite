@@ -76,15 +76,23 @@ function extractTitle(content: string): string | undefined {
   return match ? match[1]!.trim() : undefined;
 }
 
+export interface FrontmatterExtra {
+  project?: string;
+  domain?: string[];
+  tags?: string[];
+  summary?: string;
+}
+
 /**
  * Prepend YAML frontmatter if the content doesn't already have it.
- * Journals get type: log, working contexts get type: note.
+ * Journals and working contexts are both chronological session records → type: log.
  */
 export function ensureFrontmatter(
   content: string,
   type: "log" | "note",
   date: string,
   label: string,
+  extra?: FrontmatterExtra,
 ): string {
   if (content.startsWith("---\n")) return content;
 
@@ -94,10 +102,20 @@ export function ensureFrontmatter(
     `title: "${title.replace(/"/g, '\\"')}"`,
     `date: ${date}`,
     `type: ${type}`,
-    `summary: ""`,
-    "---",
-    "",
+    `summary: "${(extra?.summary ?? "").replace(/"/g, '\\"')}"`,
   ];
+
+  if (extra?.project) {
+    lines.push(`project: ${extra.project}`);
+  }
+  if (extra?.domain && extra.domain.length > 0) {
+    lines.push(`domain: [${extra.domain.join(", ")}]`);
+  }
+  if (extra?.tags && extra.tags.length > 0) {
+    lines.push(`tags: [${extra.tags.join(", ")}]`);
+  }
+
+  lines.push("---", "");
   return lines.join("\n") + content;
 }
 

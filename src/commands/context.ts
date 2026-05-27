@@ -61,7 +61,7 @@ async function writeContext(content: string): Promise<void> {
   const sessionNum = nextSession("working-context", repo);
   const filename = sessionFilename(sessionNum);
   const date = today();
-  const output = ensureFrontmatter(content, "note", date, `Working Context — ${date} S${sessionNum}`);
+  const output = ensureFrontmatter(content, "log", date, `Working Context — ${date} S${sessionNum}`);
   const outPath = join(stashPath("working-context", repo), filename);
 
   await Bun.write(outPath, output);

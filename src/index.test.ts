@@ -166,7 +166,7 @@ describe("campsite CLI", () => {
       repo: "app",
       exists: true,
     });
-    expect(ctxPayload.content).toContain("type: note");
+    expect(ctxPayload.content).toContain("type: log");
     expect(ctxPayload.content).toContain("Need tests next");
     expect(JSON.parse(status.stdout)).toMatchObject({
       repo: "app",
@@ -174,6 +174,36 @@ describe("campsite CLI", () => {
       journals: { total: 1, today: 1 },
       workingContext: { total: 1 },
       sideQuests: { open: 1 },
+    });
+  });
+
+  it("shows compact help without compacting journals", () => {
+    const repo = join(tempRoot, "workspace", "compact-help");
+    createGitRepo(repo, "git@github.com:acme/compact-help.git");
+    const journalDir = join(stashRoot, "github-com-acme-compact-help", "journal");
+    mkdirSync(journalDir, { recursive: true });
+    writeFileSync(join(journalDir, "2026-03-19-S1.md"), "---\ntitle: Empty\n---\n");
+
+    const result = runCli(repo, ["compact", "--help"], { configDir, stashRoot });
+
+    expectSuccess(result);
+    expect(result.stdout).toContain("Usage: campsite compact");
+    expect(result.stdout).not.toContain("deleted");
+    expect(readFileSync(join(journalDir, "2026-03-19-S1.md"), "utf-8")).toContain("title: Empty");
+  });
+
+  it("does not create a side quest when listing side quests", () => {
+    const repo = join(tempRoot, "workspace", "sq-list");
+    createGitRepo(repo, "git@github.com:acme/sq-list.git");
+
+    const result = runCli(repo, ["sq", "list"], { configDir, stashRoot });
+    const status = runCli(repo, ["status", "--json"], { configDir, stashRoot });
+
+    expectSuccess(result);
+    expect(result.stdout).toContain("No side quests.");
+    expectSuccess(status);
+    expect(JSON.parse(status.stdout)).toMatchObject({
+      sideQuests: { open: 0 },
     });
   });
 
