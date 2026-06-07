@@ -119,6 +119,62 @@ export function ensureFrontmatter(
   return lines.join("\n") + content;
 }
 
+export interface SessionFileMeta {
+  kind: "Journal" | "Working Context";
+  repo: string;
+  date: string;
+  session: number;
+}
+
+/**
+ * Session files (journals, working contexts) get OPINIONATED frontmatter:
+ *
+ *  - a self-describing title — the kind must be readable from the title alone
+ *    ("Journal S2 — Threading Day", "Working Context — PA S2 (2026-06-07)"),
+ *    because note titles are the spine's primary text;
+ *  - a real `created` timestamp, stamped from the clock by THIS tool at write
+ *    time (the frontmatter contract: machines stamp `created`, never agents).
+ *
+ * Works whether or not the piped content already carries frontmatter: missing
+ * blocks are built; existing blocks get the title rewritten + `created`
+ * inserted, everything else preserved. An existing `created` is immutable.
+ */
+export function ensureSessionFrontmatter(
+  content: string,
+  meta: SessionFileMeta,
+  extra?: FrontmatterExtra,
+): string {
+  const stamp = new Date().toISOString();
+  const fmMatch = content.match(/^---\n([\s\S]*?)\n---\n?/);
+  const body = fmMatch ? content.slice(fmMatch[0].length) : content;
+  const headline = extractTitle(body);
+
+  const title = meta.kind === "Working Context"
+    ? `Working Context — ${meta.repo} S${meta.session} (${meta.date})`
+    : headline
+      ? `Journal S${meta.session} — ${headline}`
+      : `Journal — ${meta.repo} S${meta.session} (${meta.date})`;
+  const titleLine = `title: "${title.replace(/"/g, '\\"')}"`;
+
+  if (!fmMatch) {
+    const withFm = ensureFrontmatter(content, "log", meta.date, title, extra);
+    return withFm.replace(/^(---\n(?:.*\n)*?date: [^\n]*\n)/, `$1created: "${stamp}"\n`)
+      // ensureFrontmatter derived the title from the H1 — enforce ours.
+      .replace(/^---\ntitle: [^\n]*\n/, `---\n${titleLine}\n`);
+  }
+
+  let block = fmMatch[1]!;
+  block = /^title:/m.test(block)
+    ? block.replace(/^title:[^\n]*$/m, titleLine)
+    : `${titleLine}\n${block}`;
+  if (!/^created:/m.test(block)) {
+    block = /^date:/m.test(block)
+      ? block.replace(/^(date:[^\n]*)$/m, `$1\ncreated: "${stamp}"`)
+      : `${block}\ncreated: "${stamp}"`;
+  }
+  return `---\n${block}\n---\n${body}`;
+}
+
 export function parseFrontmatter(content: string, file: string): FrontmatterResult {
   const match = content.match(/^---\n([\s\S]*?)\n---\n?/);
   if (!match) return missingFrontmatter(content, file);

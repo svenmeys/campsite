@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { stashPath, getRepoName, ensureStash } from "../lib/stash.ts";
 import { nextSession, sessionFilename, today } from "../lib/session.ts";
 import { flagValue, readStdin } from "../lib/args.ts";
-import { ensureFrontmatter } from "../lib/frontmatter.ts";
+import { ensureSessionFrontmatter } from "../lib/frontmatter.ts";
 
 export async function context(args: string[]): Promise<void> {
   const json = args.includes("--json");
@@ -61,7 +61,7 @@ async function writeContext(content: string): Promise<void> {
   const sessionNum = nextSession("working-context", repo);
   const filename = sessionFilename(sessionNum);
   const date = today();
-  const output = ensureFrontmatter(content, "log", date, `Working Context — ${date} S${sessionNum}`);
+  const output = ensureSessionFrontmatter(content, { kind: "Working Context", repo, date, session: sessionNum });
   const outPath = join(stashPath("working-context", repo), filename);
 
   await Bun.write(outPath, output);
