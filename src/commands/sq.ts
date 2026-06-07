@@ -91,7 +91,7 @@ export async function sq(args: string[]): Promise<void> {
   const repo = getRepoName();
 
   if (args[0] === "done" && args[1]) return done(repo, args[1]);
-  if (args[0] === "review") return review(repo);
+  if (args[0] === "review" || args[0] === "list") return review(repo);
 
   const message = args.join(" ").trim();
   if (message) {

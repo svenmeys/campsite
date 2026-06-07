@@ -53,13 +53,19 @@ You have the full conversation in context. Extract:
 
 ### 3. Write the Journal
 
-Pipe your composed entry to the CLI:
+Pipe your composed entry to the CLI with rich frontmatter flags:
 
 ```bash
-cat <<'EOF' | campsite journal
+cat <<'EOF' | campsite journal --project PROJECT --domain "engineering,ai" --tags "tag1,tag2" --summary "One-line summary of what happened"
 [Your composed journal content here]
 EOF
 ```
+
+**Always pass these flags** — infer them from the session:
+- `--project` — the repo name or project being worked on
+- `--domain` — comma-separated domains (engineering, ai, ops, content, etc.)
+- `--tags` — comma-separated tags (lowercase, kebab-case)
+- `--summary` — one sentence describing what the session accomplished
 
 ### 4. Write the Working Context
 

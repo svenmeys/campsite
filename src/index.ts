@@ -7,6 +7,9 @@ import { context } from "./commands/context.ts";
 import { status } from "./commands/status.ts";
 import { hook } from "./commands/hook.ts";
 import { config } from "./commands/config.ts";
+import { dashboard } from "./commands/dashboard.ts";
+import { plan } from "./commands/plan.ts";
+import { COMPACT_HELP, compact } from "./commands/compact.ts";
 
 const HELP = `🏕️  campsite — Leave every session better than you found it.
 
@@ -22,10 +25,14 @@ Usage: campsite <command> [options]
   context --file F  Write context (from file)
   status            Overview
   backlog           Review side quests
+  dashboard         Read/lint DASHBOARD.md
+  plan              Read/lint plans in plans/
   hook              Show session-start hook (standalone)
   hook --cli        Show session-start hook (uses campsite CLI)
   hook --install    Install standalone hook into Claude Code
   hook --install --cli  Install CLI hook into Claude Code
+  compact           Merge same-day journals, delete empties
+  compact --dry-run  Preview without changes
   config            View or set settings
 
   --help, -h        Show this help
@@ -39,8 +46,15 @@ const commands: Record<string, (args: string[]) => Promise<void> | void> = {
   context,
   status,
   backlog: (args) => sq(["review", ...args]),
+  dashboard,
+  plan,
   hook,
   config,
+  compact,
+};
+
+const commandHelp: Record<string, string> = {
+  compact: COMPACT_HELP,
 };
 
 const [command, ...args] = process.argv.slice(2);
@@ -60,6 +74,14 @@ const handler = commands[command];
 if (!handler) {
   console.error(`Unknown: ${command}. Run 'campsite --help'`);
   process.exit(1);
+}
+
+if (args.includes("--help") || args.includes("-h")) {
+  const help = commandHelp[command];
+  if (help) {
+    console.log(help);
+    process.exit(0);
+  }
 }
 
 await handler(args);
