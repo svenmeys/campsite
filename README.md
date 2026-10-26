@@ -62,6 +62,12 @@ campsite init              # Set up stash for current repo
 campsite journal           # Write a session journal (pipe or --file)
 campsite sq "message"      # Capture a side quest
 campsite sq done <n>       # Remove side quest by number
+campsite sq --group "UI" "Fix toolbar spacing" # Capture in a group
+campsite sq list                           # Groups, then ungrouped
+campsite sq list "UI"                      # One group
+campsite sq group 12 "UI"                  # Move quest
+campsite sq group 12 --none                # Clear group
+
 campsite context           # Read latest working context
 campsite context "text"    # Write working context (inline)
 campsite context -         # Write working context (piped stdin)
@@ -98,6 +104,18 @@ campsite context "Auth API done, need tests next."
 # Next session — read the context
 campsite context
 ```
+
+Side-quest capture requires **one quoted, single-line argument containing at least two words**.
+Bare words (`help`, `show`, typos), unknown flags (`--help`, `-h`) and unquoted
+command-like sequences print usage and exit 1 without writing. For example,
+`campsite sq "Improve help text"` captures a quest; `campsite sq show 12` does not.
+Group names are case-sensitive, may contain spaces (quote them), and cannot start
+with `-` or contain brackets or line breaks. Groups sort alphabetically, with
+ungrouped quests last. `sq review` and `backlog` remain aliases for `sq list`.
+
+The plain-file format is `12 [group:UI] message [branch] date`. Ungrouped lines
+retain their old format; IDs and `next_id` remain stable when regrouping or removing
+quests. Piping a plan into `campsite sq` without arguments still works.
 
 ## Agent Setup
 

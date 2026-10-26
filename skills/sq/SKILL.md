@@ -78,8 +78,24 @@ When the user asks to review the backlog:
 campsite backlog
 ```
 
+Capture requires one quoted, single-line multi-word argument. Bare words, unknown
+flags and unquoted command-like sequences fail with usage (including `help`,
+`--help`, `-h` and `show`). Use `campsite sq "Improve help text"` for a real quest.
+
+```bash
+campsite sq --group "UI" "Fix toolbar spacing" # Capture in a group
+campsite sq list                           # Groups, then ungrouped
+campsite sq list "UI"                      # One group
+campsite sq group 12 "UI"                  # Move quest
+campsite sq group 12 --none                # Clear group
+```
+
+Group names are case-sensitive; quote spaces. Names cannot start with `-` or contain
+brackets or line breaks. Tags are stored as `[group:name]` after the ID; old lines
+stay ungrouped. `sq review` and `backlog` also show grouped lists. IDs do not change.
+
 Then:
-1. Group items by theme
+1. Group items by theme with `campsite sq group <n> "theme"`
 2. Suggest which deserve their own tickets
 3. Remove completed items: `campsite sq done <n>`
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Side quest groups: `sq --group <name> "multi-word message"`, grouped `sq list [group]`, and `sq group <n> <name|--none>`, preserving existing IDs and ungrouped lines.
+- Reject bare words, unknown flags, and unquoted command-like sequences instead of filing junk quests; captures require one quoted, single-line multi-word argument.
+- Preserve the September 21 worktree stash-resolution fix and refactor compact/frontmatter helpers to pass lint.
+
 ## 0.4.0
 
 - **Stable stash identity across clones** — stash directories now derive from the git remote, so fresh clones and renamed working directories reuse the same project memory

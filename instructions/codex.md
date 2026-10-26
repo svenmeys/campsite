@@ -115,9 +115,15 @@ campsite context        Read latest working context
 campsite context "text" Write working context (inline)
 campsite context -      Write working context (piped stdin)
 campsite journal        Write journal (pipe content or --file)
-campsite sq "msg"       Capture a side quest
+campsite sq "multi-word message"   Capture (one quoted argument)
+campsite sq --group "UI" "Fix toolbar spacing" # Capture in a group
+campsite sq list                           # Groups, then ungrouped
+campsite sq list "UI"                      # One group
+campsite sq group 12 "UI"                  # Move quest
+campsite sq group 12 --none                # Clear group
+
 campsite sq done <n>    Remove side quest by number
-campsite backlog        List side quests
+campsite backlog        List side quests by group
 campsite status         Stash overview
 ```
 ````

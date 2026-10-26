@@ -17,7 +17,10 @@ Usage: campsite <command> [options]
 
   init              Set up stash for current repo
   journal           Write a session journal (pipe or --file)
-  sq <message>      Capture a side quest
+  sq "multi-word message"  Capture a side quest (one quoted argument)
+  sq --group NAME "message text"  Capture in a group
+  sq list [group]    List side quests by group
+  sq group <n> NAME  Move quest (--none clears group)
   sq done <n>       Remove side quest by number
   context           Read latest working context
   context <text>    Write context (inline text)
