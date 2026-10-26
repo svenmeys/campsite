@@ -83,28 +83,8 @@ export interface FrontmatterExtra {
   summary?: string;
 }
 
-/**
- * Prepend YAML frontmatter if the content doesn't already have it.
- * Journals and working contexts are both chronological session records → type: log.
- */
-export function ensureFrontmatter(
-  content: string,
-  type: "log" | "note",
-  date: string,
-  label: string,
-  extra?: FrontmatterExtra,
-): string {
-  if (content.startsWith("---\n")) return content;
-
-  const title = extractTitle(content) ?? label;
-  const lines = [
-    "---",
-    `title: "${title.replace(/"/g, '\\"')}"`,
-    `date: ${date}`,
-    `type: ${type}`,
-    `summary: "${(extra?.summary ?? "").replace(/"/g, '\\"')}"`,
-  ];
-
+function extraLines(extra: FrontmatterExtra): string[] {
+  const lines: string[] = [];
   if (extra?.project) {
     lines.push(`project: ${extra.project}`);
   }
@@ -114,6 +94,33 @@ export function ensureFrontmatter(
   if (extra?.tags && extra.tags.length > 0) {
     lines.push(`tags: [${extra.tags.join(", ")}]`);
   }
+
+  return lines;
+}
+
+/**
+ * Prepend YAML frontmatter if the content doesn't already have it.
+ * Journals and working contexts are both chronological session records → type: log.
+ */
+export function ensureFrontmatter(
+  content: string,
+  type: "log" | "note",
+  date: string,
+  options: FrontmatterExtra & { label: string },
+): string {
+  if (content.startsWith("---\n")) return content;
+
+  const extra = options;
+  const title = extractTitle(content) ?? options.label;
+  const lines = [
+    "---",
+    `title: "${title.replace(/"/g, '\\"')}"`,
+    `date: ${date}`,
+    `type: ${type}`,
+    `summary: "${(extra?.summary ?? "").replace(/"/g, '\\"')}"`,
+  ];
+
+  lines.push(...extraLines(extra));
 
   lines.push("---", "");
   return lines.join("\n") + content;
@@ -157,7 +164,7 @@ export function ensureSessionFrontmatter(
   const titleLine = `title: "${title.replace(/"/g, '\\"')}"`;
 
   if (!fmMatch) {
-    const withFm = ensureFrontmatter(content, "log", meta.date, title, extra);
+    const withFm = ensureFrontmatter(content, "log", meta.date, { ...extra, label: title });
     return withFm.replace(/^(---\n(?:.*\n)*?date: [^\n]*\n)/, `$1created: "${stamp}"\n`)
       // ensureFrontmatter derived the title from the H1 — enforce ours.
       .replace(/^---\ntitle: [^\n]*\n/, `---\n${titleLine}\n`);

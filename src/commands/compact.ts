@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, readFileSync, unlinkSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, unlinkSync, renameSync } from "node:fs";
 import { join, basename } from "node:path";
 import { getStashRoot } from "../lib/config.ts";
 import { parseFrontmatter, frontmatterValue } from "../lib/frontmatter.ts";
@@ -70,7 +70,17 @@ function mergeBodies(files: JournalFile[]): string {
     if (file.empty) continue;
     parts.push(file.body.trim());
   }
-  return parts.join("\n\n---\n\n") + "\n";
+  return `${parts.join("\n\n---\n\n")}\n`;
+}
+
+function firstValue(files: JournalFile[], key: string, excluded?: string): string | undefined {
+  for (const file of files) {
+    const raw = frontmatterValue(file.data, key);
+    if (!raw) continue;
+    const value = unquote(raw);
+    if (value && value !== excluded) return value;
+  }
+  return undefined;
 }
 
 /** Build merged frontmatter from the best available data */
@@ -84,26 +94,10 @@ function buildMergedFrontmatter(date: string, files: JournalFile[]): string {
     .filter((t) => !t.startsWith("Journal —") && !t.startsWith("Session "));
   const title = titles[0] ?? `Journal — ${date}`;
 
-  // Merge tags and domain from all files
-  const allTags = new Set<string>();
-  const allDomain = new Set<string>();
-  let project: string | undefined;
-  let summary: string | undefined;
-
-  for (const file of contentFiles) {
-    for (const t of getList(file.data, "tags")) allTags.add(t);
-    for (const d of getList(file.data, "domain")) allDomain.add(d);
-
-    if (!project) {
-      const p = frontmatterValue(file.data, "project");
-      if (p) project = unquote(p);
-    }
-    if (!summary || summary === "" || summary === "Empty session journal — no content recorded") {
-      const raw = frontmatterValue(file.data, "summary");
-      const s = raw ? unquote(raw) : undefined;
-      if (s && s !== "" && s !== "Empty session journal — no content recorded") summary = s;
-    }
-  }
+  const allTags = new Set(contentFiles.flatMap((file) => getList(file.data, "tags")));
+  const allDomain = new Set(contentFiles.flatMap((file) => getList(file.data, "domain")));
+  const project = firstValue(contentFiles, "project");
+  const summary = firstValue(contentFiles, "summary", "Empty session journal — no content recorded");
 
   const lines = [
     "---",
@@ -121,112 +115,66 @@ function buildMergedFrontmatter(date: string, files: JournalFile[]): string {
   return lines.join("\n");
 }
 
+function readJournals(journalDir: string): JournalFile[] {
+  const journals: JournalFile[] = [];
+  for (const filename of readdirSync(journalDir)) {
+    const parsed = parseSessionFilename(filename);
+    if (!parsed) continue;
+    const filePath = join(journalDir, filename);
+    const fm = parseFrontmatter(readFileSync(filePath, "utf-8"), filename);
+    journals.push({ path: filePath, filename, ...parsed, body: fm.body, data: fm.data, empty: isEmpty(fm.body) });
+  }
+  return journals;
+}
+
+function deleteEmpty(files: JournalFile[], dryRun: boolean): void {
+  for (const file of files) {
+    if (dryRun) console.log(`  would delete (empty): ${file.filename}`);
+    else unlinkSync(file.path);
+  }
+}
+
+function renameSurvivor(file: JournalFile, targetPath: string, dryRun: boolean): number {
+  if (file.path === targetPath || existsSync(targetPath)) return 0;
+  if (dryRun) console.log(`  would rename: ${file.filename} → ${basename(targetPath)}`);
+  else renameSync(file.path, targetPath);
+  return 1;
+}
+
+function mergeDay(files: JournalFile[], targetPath: string, dryRun: boolean): void {
+  const contentFiles = files.filter((file) => !file.empty);
+  if (dryRun) {
+    console.log(`  would merge ${contentFiles.length} sessions → ${basename(targetPath)}`);
+    deleteEmpty(files.filter((file) => file.empty), true);
+    return;
+  }
+  const mergedFm = buildMergedFrontmatter(files[0]!.date, files);
+  Bun.write(targetPath, `${mergedFm}\n\n${mergeBodies(files)}`);
+  for (const file of files) {
+    if (file.path !== targetPath) unlinkSync(file.path);
+  }
+}
+
 function compactProject(journalDir: string, dryRun: boolean): { deleted: number; merged: number; project: string } {
   const project = basename(join(journalDir, ".."));
   let deleted = 0;
   let merged = 0;
-
   if (!existsSync(journalDir)) return { deleted, merged, project };
-
-  const entries = readdirSync(journalDir).filter((f) => f.endsWith(".md"));
-  const journals: JournalFile[] = [];
-
-  for (const filename of entries) {
-    const parsed = parseSessionFilename(filename);
-    if (!parsed) continue; // skip non-session files like WORKING_CONTEXT.md or date-only files
-
-    const filePath = join(journalDir, filename);
-    const raw = readFileSync(filePath, "utf-8");
-    const fm = parseFrontmatter(raw, filename);
-
-    journals.push({
-      path: filePath,
-      filename,
-      date: parsed.date,
-      session: parsed.session,
-      body: fm.body,
-      data: fm.data,
-      empty: isEmpty(fm.body),
-    });
-  }
-
-  const groups = groupByDate(journals);
-
-  for (const [date, files] of groups) {
-    // Sort by session number
+  for (const [date, files] of groupByDate(readJournals(journalDir))) {
     files.sort((a, b) => a.session - b.session);
-
-    const contentFiles = files.filter((f) => !f.empty);
-    const emptyFiles = files.filter((f) => f.empty);
-
-    // Single file, no work needed
+    const contentFiles = files.filter((file) => !file.empty);
+    const emptyFiles = files.filter((file) => file.empty);
     if (files.length === 1 && !files[0]!.empty) continue;
-
-    // All empty — delete all
-    if (contentFiles.length === 0) {
-      for (const file of emptyFiles) {
-        if (dryRun) {
-          console.log(`  would delete (empty): ${file.filename}`);
-        } else {
-          unlinkSync(file.path);
-        }
-        deleted++;
-      }
-      continue;
-    }
-
-    // Single content file + empties — delete empties, rename content if needed
-    if (contentFiles.length === 1) {
-      for (const file of emptyFiles) {
-        if (dryRun) {
-          console.log(`  would delete (empty): ${file.filename}`);
-        } else {
-          unlinkSync(file.path);
-        }
-        deleted++;
-      }
-
-      // Rename the surviving file to YYYY-MM-DD.md if it's a session file
-      const survivor = contentFiles[0]!;
-      const targetName = `${date}.md`;
-      const targetPath = join(journalDir, targetName);
-      if (survivor.filename !== targetName && !existsSync(targetPath)) {
-        if (dryRun) {
-          console.log(`  would rename: ${survivor.filename} → ${targetName}`);
-        } else {
-          const { renameSync } = require("node:fs");
-          renameSync(survivor.path, targetPath);
-        }
-        merged++;
-      }
-      continue;
-    }
-
-    // Multiple content files — merge into one YYYY-MM-DD.md
-    const targetName = `${date}.md`;
-    const targetPath = join(journalDir, targetName);
-    const mergedBody = mergeBodies(files);
-    const mergedFm = buildMergedFrontmatter(date, files);
-    const mergedContent = mergedFm + "\n\n" + mergedBody;
-
-    if (dryRun) {
-      console.log(`  would merge ${contentFiles.length} sessions → ${targetName}`);
-      for (const file of emptyFiles) {
-        console.log(`  would delete (empty): ${file.filename}`);
-      }
+    const targetPath = join(journalDir, `${date}.md`);
+    if (contentFiles.length <= 1) {
+      deleteEmpty(emptyFiles, dryRun);
+      if (contentFiles[0]) merged += renameSurvivor(contentFiles[0], targetPath, dryRun);
     } else {
-      Bun.write(targetPath, mergedContent);
-      // Delete all session files (the merged file replaces them)
-      for (const file of files) {
-        if (file.path !== targetPath) {
-          unlinkSync(file.path);
-        }
-      }
+      mergeDay(files, targetPath, dryRun);
+      merged++;
     }
-    merged++;
     deleted += emptyFiles.length;
   }
-
   return { deleted, merged, project };
 }
 
