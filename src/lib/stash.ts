@@ -1,6 +1,6 @@
 import { execSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { join, basename } from "node:path";
+import { join, basename, dirname } from "node:path";
 import { getStashRoot } from "./config.ts";
 
 const STASH_DIRS = ["journal", "working-context", "plans", "outputs"];
@@ -34,6 +34,14 @@ export function getBranch(cwd: string = process.cwd()): string {
 }
 
 function getRepoRoot(cwd: string): string | undefined {
+  // A linked worktree's --show-toplevel is the worktree directory, whose name is
+  // disposable (t3code-7faf02ef, feature-branch-2, ...). Resolving to it splits one
+  // repo's stash across every worktree and rewrites repoName on each write. The common
+  // git dir points at the main checkout from anywhere, so derive the root from that and
+  // fall back only when it is not a plain ".git" directory (submodules, bare repos).
+  const commonDir = gitOutput("git rev-parse --path-format=absolute --git-common-dir", cwd);
+  if (commonDir && basename(commonDir) === ".git") return dirname(commonDir);
+
   return gitOutput("git rev-parse --show-toplevel", cwd);
 }
 

@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { execSync, spawnSync } from "node:child_process";
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 
@@ -205,6 +205,48 @@ describe("campsite CLI", () => {
     expect(JSON.parse(status.stdout)).toMatchObject({
       sideQuests: { open: 0 },
     });
+  });
+
+  it("files a side quest from a linked worktree under the main checkout", () => {
+    const repo = join(tempRoot, "workspace", "wt-main");
+    createGitRepo(repo, "git@github.com:acme/wt-main.git");
+    execSync("git commit --allow-empty -m init", { cwd: repo, stdio: "ignore" });
+    const worktree = join(tempRoot, "workspace", "throwaway-worktree-name");
+    execSync(`git worktree add -b side "${worktree}"`, { cwd: repo, stdio: "ignore" });
+
+    const result = runCli(worktree, ["sq", "note from a worktree"], { configDir, stashRoot });
+    expectSuccess(result);
+
+    // With an origin, the stash id is already remote-derived, so only repoName moves
+    // here: the old code stamped the disposable worktree directory name.
+    expect(
+      readFileSync(join(stashRoot, "github-com-acme-wt-main", ".repo.json"), "utf-8"),
+    ).toContain('"repoName": "wt-main"');
+    expect(
+      readFileSync(join(stashRoot, "github-com-acme-wt-main", "backlog.md"), "utf-8"),
+    ).toContain("note from a worktree");
+  });
+
+  it("keeps one stash for a worktree of a repo with no remote", () => {
+    // The case where resolution actually splits: with no origin, getRepoId falls back
+    // to the repo name, so the old code gave every worktree its own stash directory.
+    const repo = join(tempRoot, "workspace", "no-remote-main");
+    mkdirSync(repo, { recursive: true });
+    execSync("git init", { cwd: repo, stdio: "ignore" });
+    execSync('git -c user.name=t -c user.email=t@t commit --allow-empty -m init', {
+      cwd: repo,
+      stdio: "ignore",
+    });
+    const worktree = join(tempRoot, "workspace", "no-remote-throwaway");
+    execSync(`git worktree add -b side "${worktree}"`, { cwd: repo, stdio: "ignore" });
+
+    const result = runCli(worktree, ["sq", "note without a remote"], { configDir, stashRoot });
+    expectSuccess(result);
+
+    expect(
+      readFileSync(join(stashRoot, "no-remote-main", "backlog.md"), "utf-8"),
+    ).toContain("note without a remote");
+    expect(existsSync(join(stashRoot, "no-remote-throwaway"))).toBe(false);
   });
 
   it("initializes a stash using the configured root", () => {

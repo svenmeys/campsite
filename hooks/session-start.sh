@@ -6,10 +6,17 @@ input=$(cat)
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 
-# Get repo name
+# Get repo name. Mirrors getRepoRoot in src/lib/stash.ts: a linked worktree's toplevel
+# is the disposable worktree directory, so resolve through the common git dir, but only
+# when it is a plain ".git" (a submodule reports .git/modules/<name>, a bare repo or
+# --separate-git-dir reports the git dir itself).
 REPO_NAME=$(basename "$PROJECT_DIR")
 if git -C "$PROJECT_DIR" rev-parse --show-toplevel >/dev/null 2>&1; then
   REPO_NAME=$(basename "$(git -C "$PROJECT_DIR" rev-parse --show-toplevel)")
+  common_dir=$(git -C "$PROJECT_DIR" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)
+  if [[ -n "$common_dir" && "$(basename "$common_dir")" == ".git" ]]; then
+    REPO_NAME=$(basename "$(dirname "$common_dir")")
+  fi
 fi
 
 # Read stash root from config, default to ~/.campsite
