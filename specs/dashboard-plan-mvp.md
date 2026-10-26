@@ -1,5 +1,7 @@
 # Dashboard + Plan MVP
 
+Design proposal. The current CLI implements reads and validation only; creation, editing, linking and `--fix` commands below describe proposed work.
+
 ## Goal
 
 Add first-class planning to campsite without losing the human-readable `DASHBOARD.md` workflow.
@@ -80,8 +82,8 @@ Within a managed section, campsite recognizes checklist items with this shape:
 ```md
 - [ ] [DB-12] Loosen workspace-owner-only install -- Allow installs by non-owners so other teams can test.
   - plan: [PLAN-3](plans/PLAN-3-non-owner-install.md)
-  - ticket: ASYNC-123
-  - owner: sven
+  - ticket: DEMO-123
+  - owner: alex
   - due: 2026-03-25
 ```
 
@@ -119,7 +121,7 @@ Freeform paragraphs, blockquotes, and bullets are allowed anywhere.
 
 MVP rule: campsite only mutates recognized checklist items inside managed sections. Everything else is preserved and treated as read-only prose.
 
-This allows dashboards like Asyncbot to keep explanatory notes, milestone prose, and non-queue sections without breaking the parser.
+This allows project dashboards to keep explanatory notes, milestone prose, and non-queue sections without breaking the parser.
 
 ## Plan Contract
 
@@ -132,7 +134,7 @@ id: PLAN-3
 title: Non-owner install
 status: active
 updated: 2026-03-18
-ticket: ASYNC-123
+ticket: DEMO-123
 dashboard:
   - DB-12
 ---
@@ -317,8 +319,8 @@ updated: 2026-03-18
 
 - [ ] [DB-12] Loosen workspace-owner-only install -- Allow installs by non-owners so other teams can test.
   - plan: [PLAN-3](plans/PLAN-3-non-owner-install.md)
-  - ticket: ASYNC-123
-  - owner: sven
+  - ticket: DEMO-123
+  - owner: alex
 
 ### Tier 0
 <!-- campsite:section id=now.tier-0 -->
@@ -343,7 +345,7 @@ id: PLAN-3
 title: Non-owner install
 status: active
 updated: 2026-03-18
-ticket: ASYNC-123
+ticket: DEMO-123
 dashboard:
   - DB-12
 ---
@@ -370,7 +372,7 @@ Allow non-owner installs so teams outside the workspace owner can test the app.
 
 ## Notes
 
-Check whether Slack install callbacks assume owner-only authorization.
+Check whether provider install callbacks assume owner-only authorization.
 ```
 
 ## Future Extensions

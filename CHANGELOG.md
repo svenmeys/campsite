@@ -2,9 +2,17 @@
 
 ## Unreleased
 
-- Side quest groups: `sq --group <name> "multi-word message"`, grouped `sq list [group]`, and `sq group <n> <name|--none>`, preserving existing IDs and ungrouped lines.
-- Reject bare words, unknown flags, and unquoted command-like sequences instead of filing junk quests; captures require one quoted, single-line multi-word argument.
-- Preserve the September 21 worktree stash-resolution fix and refactor compact/frontmatter helpers to pass lint.
+- **Stable side-quest IDs** — preserve remaining IDs after deletion and allocate new IDs from `next_id`; legacy backlogs without frontmatter remain readable.
+- **Side-quest groups** — capture with `sq --group <name> "multi-word message"`, list under group headings with `sq list [group]`, and move or clear groups with `sq group <n> <name|--none>`. Ungrouped quests appear last; `sq review` and `backlog` remain list aliases.
+- **Accidental-capture protection** — bare words, unknown flags and unquoted command-like sequences print usage and exit non-zero. Captures require one quoted, single-line argument containing at least two words; piped plan capture remains supported.
+- **Session frontmatter** — journal and working-context writes add YAML metadata, descriptive session titles and a machine-generated `created` timestamp. Both use `type: log`; existing `created` timestamps are preserved.
+- **Journal metadata flags** — accept `--project`, `--domain`, `--tags` and `--summary` when generating frontmatter. Existing frontmatter is preserved apart from session title and missing creation metadata.
+- **Dashboard reads and validation** — add `dashboard show`, `dashboard item` and `dashboard lint` for repository-local `DASHBOARD.md`, including section filtering, brief output and JSON reads.
+- **Plan reads and validation** — add `plan show` and `plan lint` for repository-local `plans/`, including acceptance-criteria progress, dashboard references, brief output and JSON reads. Dashboard and plan creation/editing commands remain outside the implemented scope.
+- **Journal compaction** — add `compact` to merge same-day session journals and remove empty session files, with `--dry-run` previews.
+- **Shared worktree stash** — linked worktrees resolve the main checkout's repository name and stash in both the CLI and session-start hook, including repositories without a remote.
+- **Agent guidance** — expand Codex and Cursor setup, add Windsurf instructions, and update journal metadata, side-quest capture and optional running-notes guidance.
+- **Validation coverage** — add CLI coverage for planning, worktree stash resolution, side-quest groups and rejected captures, plus compaction fixtures. Refactor compact/frontmatter helpers to satisfy lint limits.
 
 ## 0.4.0
 

@@ -36,8 +36,8 @@ updated: 2026-03-19
 
 - [ ] [DB-12] Loosen workspace-owner-only install -- Allow installs by non-owners so other teams can test.
   - plan: [PLAN-3](plans/PLAN-3-non-owner-install.md)
-  - ticket: ASYNC-123
-  - owner: sven
+  - ticket: DEMO-123
+  - owner: alex
 
 ## Done
 <!-- campsite:section id=done -->
@@ -56,7 +56,7 @@ id: PLAN-3
 title: Non-owner install
 status: active
 updated: 2026-03-19
-ticket: ASYNC-123
+ticket: DEMO-123
 dashboard:
   - DB-12
 ---
@@ -83,7 +83,7 @@ Allow non-owner installs so teams outside the workspace owner can test the app.
 
 ## Notes
 
-Check Slack install callback assumptions.
+Check provider install callback assumptions.
 `,
   );
 }

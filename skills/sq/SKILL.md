@@ -25,7 +25,7 @@ If the human did not give the why, do not invent one. Either ask one short quest
 
 Use `campsite sq` for isolated tangents.
 
-Use project-vault `RUNNING_NOTES.md` for the general project scratch log: daily observations, rough ideas, risks, slow-build notes, model smells, UI sparks, and anything useful but not ready to become a task. It is append-first and reviewed later.
+Optionally use a project `RUNNING_NOTES.md` for the general project scratch log: daily observations, rough ideas, risks, slow-build notes, model smells, UI sparks, and anything useful but not ready to become a task. It is append-first and reviewed later.
 
 Minimal structure:
 
@@ -49,7 +49,7 @@ Use optional note-local subheadings only when useful.
 
 Rules for running notes:
 
-- One project, one `RUNNING_NOTES.md`, stored in that project's vault folder.
+- One project, one `RUNNING_NOTES.md`, stored in the project's chosen notes folder.
 - New notes go under `## Inbox`.
 - Each note starts with `### YYYY-MM-DD HH:MM — Title`.
 - Tags do grouping; do not create many category headings.
